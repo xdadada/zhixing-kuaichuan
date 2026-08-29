@@ -1,0 +1,24 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# 构建产物
+dist/
+*.app
+*.zip
+*.ipa
+*.apk
+*.aab
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# macOS
+.DS_Store
+.pub-cache-local/

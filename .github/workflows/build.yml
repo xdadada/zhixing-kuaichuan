@@ -1,0 +1,94 @@
+name: 构建发布版本
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: 'stable'
+
+      - name: 获取依赖
+        run: flutter pub get
+
+      - name: 构建 macOS
+        run: flutter build macos --release
+
+      - name: 打包 .app
+        run: |
+          cd build/macos/Build/Products/Release
+          ditto -c -k --sequesterRsrc --keepParent lan_drop.app 知行快传-macOS.zip
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS
+          path: build/macos/Build/Products/Release/知行快传-macOS.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: 'stable'
+
+      - name: 获取依赖
+        run: flutter pub get
+
+      - name: 构建 Windows
+        run: flutter build windows --release
+
+      - name: 打包可执行文件
+        run: |
+          cd build/windows/x64/runner/Release
+          Compress-Archive -Path * -DestinationPath ../../../../../知行快传-Windows.zip
+        shell: pwsh
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows
+          path: 知行快传-Windows.zip
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: 'stable'
+
+      - name: 获取依赖
+        run: flutter pub get
+
+      - name: 构建 iOS (无签名)
+        run: |
+          flutter build ios --release --no-codesign
+          cd build/ios/iphoneos
+          mkdir Payload
+          cp -r Runner.app Payload/
+          zip -r 知行快传-iOS-未签名.ipa Payload
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS
+          path: build/ios/iphoneos/知行快传-iOS-未签名.ipa

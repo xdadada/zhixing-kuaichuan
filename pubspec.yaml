@@ -1,0 +1,30 @@
+name: lan_drop
+description: "知行快传 — 局域网文件互传(Flutter,macOS / iOS / Windows),Para 风格 UI。"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.5
+  # 跨平台文件/目录选择器(macOS / iOS / Windows 原生面板)
+  file_picker: ^12.1.2
+  # 桌面端拖拽投放文件
+  desktop_drop: ^0.8.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  config:
+    enable-swift-package-manager: false
+  fonts:
+    - family: SolarIcons
+      fonts:
+        - asset: assets/fonts/SolarIcons.ttf
