@@ -79,13 +79,17 @@ class Device {
 
   /// 从组播公告 / HTTP 响应解析。字段缺失或类型不对时返回 null,
   /// 不让畸形的广播包打断发现流程。
-  static Device? fromJson(Map<String, dynamic> j, {String? fallbackIp}) {
+  ///
+  /// [observedIp] 是「包的实际来源地址」或「实际连上的地址」。它优先于
+  /// 包内自报的 ip:对方换网后本机 IP 变了,但 App 可能还在广播旧 IP,
+  /// 自报值会过期,而来源地址永远是当下可达的。
+  static Device? fromJson(Map<String, dynamic> j, {String? observedIp}) {
     final fp = j['fingerprint'];
     final alias = j['alias'];
     if (fp is! String || fp.isEmpty) return null;
     if (alias is! String || alias.isEmpty) return null;
     final port = j['port'];
-    final ip = (j['ip'] as String?) ?? fallbackIp;
+    final ip = observedIp ?? (j['ip'] as String?);
     if (ip == null || ip.isEmpty) return null;
     return Device(
       fingerprint: fp,

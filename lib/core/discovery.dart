@@ -126,7 +126,7 @@ class DiscoveryService {
       return; // 不是我们的包,忽略
     }
     if (j['fingerprint'] == self.fingerprint) return; // 自己发的
-    final dev = Device.fromJson(j, fallbackIp: dg.address.address);
+    final dev = Device.fromJson(j, observedIp: dg.address.address);
     if (dev == null) return;
     udpWorking = true;
     _found.add(dev);
@@ -266,7 +266,7 @@ class DiscoveryService {
           .timeout(timeout);
       final j = jsonDecode(body);
       if (j is! Map<String, dynamic>) return null;
-      return Device.fromJson(j, fallbackIp: ip);
+      return Device.fromJson(j, observedIp: ip);
     } catch (_) {
       return null; // 绝大多数 IP 都是超时/拒绝,属正常
     } finally {

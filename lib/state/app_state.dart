@@ -81,6 +81,7 @@ class AppState extends ChangeNotifier {
   Timer? _persistDebounce;
   Timer? _ticker;
   Timer? _pruneTimer;
+  Timer? _netWatchTimer;
   StreamSubscription<Device>? _deviceSub;
 
   /// 上一秒的已传字节数,用于算速度
@@ -105,6 +106,9 @@ class AppState extends ChangeNotifier {
     // 15 秒没公告的设备视为离线
     _pruneTimer =
         Timer.periodic(const Duration(seconds: 5), (_) => _pruneDevices());
+    // 换 Wi-Fi / DHCP 续租会改本机 IP,定期检查,变了就重新公告
+    _netWatchTimer =
+        Timer.periodic(const Duration(seconds: 10), (_) => _refreshLocalIp());
 
     notifyListeners();
     _persist();
@@ -165,10 +169,28 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 定期重取本机 IP(见 [_netWatchTimer])。变了说明网络环境变了:
+  /// 刷新网卡信息、更新公告内容并立即广播一次,避免拿着旧 IP 继续公告,
+  /// 导致对方按过期地址连接超时。
+  Future<void> _refreshLocalIp() async {
+    final ip = await DiscoveryService.primaryIp();
+    if (ip == null || ip == localIp) return;
+    debugPrint('[app] local ip changed: $localIp -> $ip');
+    localIp = ip;
+    final d = _discovery;
+    if (d != null) {
+      await d.refreshInterfaces();
+      d.self = selfDevice;
+      d.announce();
+    }
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _ticker?.cancel();
     _pruneTimer?.cancel();
+    _netWatchTimer?.cancel();
     _persistDebounce?.cancel();
     _deviceSub?.cancel();
     _discovery?.dispose();
